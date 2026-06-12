@@ -54,7 +54,7 @@ The default Round-Robin scheduler treats all processes equally, which is ineffic
 | Feature | Implementation Detail |
 | :--- | :--- |
 | **Priority Range** | `0` (Highest) to `100` (Lowest). Default: `50`. |
-| **Selection Logic** | The scheduler scans the `proc` array, strictly selecting the `RUNNABLE` process with the lowest numeric priority value. |
+| **Selection Logic** | The scheduler scans the `proc` array, strictly selects the `RUNNABLE` process with the lowest numeric priority value. |
 | **Tie-Breaking** | If multiple processes share the highest priority, CPU time is multiplexed among them using Round-Robin. |
 | **Preemption** | If `setpriority()` assigns a stronger priority to a process, the current process immediately yields the CPU (`yield()`), triggering a context switch. |
 
@@ -91,7 +91,6 @@ The build system was extended to pass the `SCHEDULER` variable directly to the G
 ```makefile
 SCHEDULER ?= DEFAULT
 CFLAGS += -DSCHEDULER_$(SCHEDULER)
-
 Testing & Benchmarks
 The project includes custom user-space benchmarking suites to validate the theoretical models:
 
@@ -119,7 +118,7 @@ Ensure you have the RISC-V toolchain (riscv64-linux-gnu-gcc) and qemu-system-ris
 Clone the repository:
 
 Bash
-git clone https://github.com/amirpoori99/xv6-riscv-project.git
+git clone [https://github.com/amirpoori99/xv6-riscv-project.git](https://github.com/amirpoori99/xv6-riscv-project.git)
 cd xv6-riscv-project
 Boot with Default Scheduler (Round-Robin):
 
@@ -136,5 +135,3 @@ make qemu CPUS=1 SCHEDULER=LOTTERY
 To exit QEMU, press Ctrl + A, release, then press X.
 
 Developed as part of the Operating Systems course curriculum.
-
-
