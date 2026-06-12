@@ -1,9 +1,16 @@
-#define NPROC_MAX 64
+#ifndef _PINFO_H_
+#define _PINFO_H_
+
+#include "types.h"
 
 struct pinfo {
-  int pid[NPROC_MAX];
-  int state[NPROC_MAX];
-  int sz[NPROC_MAX];
-  char name[NPROC_MAX][16];
-  int nproc;
+  int num_processes;
+  int pids[64];
+  int states[64];
+  uint64 sizes[64];
+  char names[64][16];
+  int priorities[64];  
+  int tickets[64];    
 };
+
+#endif

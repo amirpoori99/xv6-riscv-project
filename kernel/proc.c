@@ -431,34 +431,35 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
-  // PRNG state for lottery scheduler
-  static unsigned long randstate = 1;
+       
+    if(c->randstate == 0) {
+    c->randstate = 123456789; 
+   }    
 
   for(;;){
     intr_on();
 
-#ifdef SCHEDULER_PRIORITY
-    struct proc *best_p = 0;
+#if defined(SCHEDULER_PRIORITY)
+    int best_prio = 101; 
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        if(!best_p || p->priority < best_p->priority) {
-          if(best_p) release(&best_p->lock);
-          best_p = p;
-        } else {
-          release(&p->lock);
+      if(p->state == RUNNABLE && p->priority < best_prio) {
+        best_prio = p->priority;
+      }
+      release(&p->lock);
+    }
+    if(best_prio <= 100) {
+      for(p = proc; p < &proc[NPROC]; p++) {
+        acquire(&p->lock);
+
+        if(p->state == RUNNABLE && p->priority == best_prio) {
+          p->state = RUNNING;
+          c->proc = p;
+          swtch(&c->context, &p->context);
+          c->proc = 0;
         }
-      } else {
         release(&p->lock);
       }
-    }
-    if(best_p) {
-      best_p->state = RUNNING;
-      c->proc = best_p;
-      swtch(&c->context, &best_p->context);
-      c->proc = 0;
-      release(&best_p->lock);
     }
 
 #elif defined(SCHEDULER_LOTTERY)
@@ -473,8 +474,8 @@ scheduler(void)
 
     if(total_tickets > 0){
       // LCG PRNG using system ticks as seed
-      randstate = randstate * 1664525 + 1013904223 + ticks;
-      int winning_ticket = (randstate >> 16) % total_tickets;
+      c->randstate = c->randstate * 1664525 + 1013904223 + ticks;
+      int winning_ticket = (c->randstate >> 16) % total_tickets;
       int current_ticket = 0;
       
       for(p = proc; p < &proc[NPROC]; p++){
@@ -739,31 +740,38 @@ procdump(void)
 }
 
 int
-getpinfo(uint64 addr)
+getpinfo(uint64 upinfo_addr)
 {
   struct proc *p;
-  struct pinfo pi;
-  int i = 0;
+  struct pinfo kinfo;
+  int idx = 0;
+
+  memset(&kinfo, 0, sizeof(kinfo));
+
+  kinfo.num_processes = 0;
 
   for(p = proc; p < &proc[NPROC]; p++){
     acquire(&p->lock);
     if(p->state != UNUSED){
-      pi.pid[i]   = p->pid;
-      pi.state[i] = p->state;
-      pi.sz[i]    = p->sz;
-      safestrcpy(pi.name[i], p->name, sizeof(pi.name[i]));
-      i++;
+      kinfo.pids[idx] = p->pid;
+      kinfo.states[idx] = p->state;
+      kinfo.sizes[idx] = p->sz;
+      safestrcpy(kinfo.names[idx], p->name, sizeof(p->name));
+      
+      kinfo.priorities[idx] = p->priority;
+      kinfo.tickets[idx] = p->tickets;
+      
+      idx++;
     }
     release(&p->lock);
   }
-  pi.nproc = i;
+  kinfo.num_processes = idx;
 
-  struct proc *cur = myproc();
-  if(copyout(cur->pagetable, addr, (char*)&pi, sizeof(pi)) < 0)
+  if(copyout(myproc()->pagetable, upinfo_addr, (char *)&kinfo, sizeof(kinfo)) < 0)
     return -1;
+
   return 0;
 }
-
 
 int
 setpriority(int pid, int priority)
