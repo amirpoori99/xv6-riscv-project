@@ -1,6 +1,7 @@
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
+#include "pinfo.h"
 #include "param.h"
 #include "memlayout.h"
 #include "spinlock.h"
@@ -107,3 +108,12 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_getpinfo(void)
+{
+  uint64 addr;
+  argaddr(0, &addr);
+  return getpinfo(addr);
+}
+
