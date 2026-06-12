@@ -36,7 +36,7 @@ The xv6 OS is a modern re-implementation of Unix V6 for the RISC-V architecture.
 
 ## 📊 Phase 1: Kernel-User Boundary & Telemetry
 
-### The `getpinfo` System Call
+### The getpinfo System Call
 To provide system transparency, a new syscall (`SYS_getpinfo`) was engineered. Instead of iterating through processes in user-space, the kernel safely constructs a snapshot of the process table and pushes it across the protection boundary.
 
 **Key Technical Details:**
@@ -54,7 +54,7 @@ The default Round-Robin scheduler treats all processes equally, which is ineffic
 | Feature | Implementation Detail |
 | :--- | :--- |
 | **Priority Range** | `0` (Highest) to `100` (Lowest). Default: `50`. |
-| **Selection Logic** | The scheduler scans the `proc` array, strictly selects the `RUNNABLE` process with the lowest numeric priority value. |
+| **Selection Logic** | The scheduler scans the `proc` array, strictly selecting the `RUNNABLE` process with the lowest numeric priority value. |
 | **Tie-Breaking** | If multiple processes share the highest priority, CPU time is multiplexed among them using Round-Robin. |
 | **Preemption** | If `setpriority()` assigns a stronger priority to a process, the current process immediately yields the CPU (`yield()`), triggering a context switch. |
 
@@ -91,7 +91,6 @@ The build system was extended to pass the `SCHEDULER` variable directly to the G
 ```makefile
 SCHEDULER ?= DEFAULT
 CFLAGS += -DSCHEDULER_$(SCHEDULER)
-
 
 📈 Testing & Benchmarks
 The project includes custom user-space benchmarking suites to validate the theoretical models:
