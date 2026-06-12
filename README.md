@@ -11,18 +11,18 @@
 
 ---
 
-## 📑 Table of Contents
-1. [Project Objectives & Scientific Context](#-project-objectives--scientific-context)
-2. [Phase 1: Kernel-User Boundary & Telemetry](#-phase-1-kernel-user-boundary--telemetry)
-3. [Phase 2: Deterministic Priority Scheduling](#-phase-2-deterministic-priority-scheduling)
-4. [Phase 3: Probabilistic Lottery Scheduling](#-phase-3-probabilistic-lottery-scheduling)
-5. [Unified Architecture & Compilation](#-unified-architecture--compilation)
-6. [Testing & Benchmarks](#-testing--benchmarks)
-7. [How to Run](#-how-to-run)
+## Table of Contents
+1. [Project Objectives & Scientific Context](#project-objectives--scientific-context)
+2. [Phase 1: Kernel-User Boundary & Telemetry](#phase-1-kernel-user-boundary--telemetry)
+3. [Phase 2: Deterministic Priority Scheduling](#phase-2-deterministic-priority-scheduling)
+4. [Phase 3: Probabilistic Lottery Scheduling](#phase-3-probabilistic-lottery-scheduling)
+5. [Unified Architecture & Compilation](#unified-architecture--compilation)
+6. [Testing & Benchmarks](#testing--benchmarks)
+7. [How to Run](#how-to-run)
 
 ---
 
-## 🔬 Project Objectives & Scientific Context
+## Project Objectives & Scientific Context
 
 The xv6 OS is a modern re-implementation of Unix V6 for the RISC-V architecture. By default, it employs a rudimentary Round-Robin scheduler with an $O(N)$ time complexity for process selection. 
 
@@ -34,7 +34,7 @@ The xv6 OS is a modern re-implementation of Unix V6 for the RISC-V architecture.
 
 ---
 
-## 📊 Phase 1: Kernel-User Boundary & Telemetry
+## Phase 1: Kernel-User Boundary & Telemetry
 
 ### The getpinfo System Call
 To provide system transparency, a new syscall (`SYS_getpinfo`) was engineered. Instead of iterating through processes in user-space, the kernel safely constructs a snapshot of the process table and pushes it across the protection boundary.
@@ -47,7 +47,7 @@ To provide system transparency, a new syscall (`SYS_getpinfo`) was engineered. I
 
 ---
 
-## ⚡ Phase 2: Deterministic Priority Scheduling
+## Phase 2: Deterministic Priority Scheduling
 
 The default Round-Robin scheduler treats all processes equally, which is inefficient for real-time or critical tasks. We implemented an **Absolute Priority Scheduler**.
 
@@ -60,7 +60,7 @@ The default Round-Robin scheduler treats all processes equally, which is ineffic
 
 ---
 
-## 🎲 Phase 3: Probabilistic Lottery Scheduling
+## Phase 3: Probabilistic Lottery Scheduling
 
 To implement proportional-share scheduling without strict starvation, a **Lottery Scheduler** was introduced. Processes are granted "tickets", and the CPU is raffled off proportionally.
 
@@ -81,7 +81,7 @@ $$X_{n+1} = (a \cdot X_n + c + \text{entropy}) \pmod{m}$$
 
 ---
 
-## 🏗️ Unified Architecture & Compilation
+## Unified Architecture & Compilation
 
 Rather than fragmenting the project into separate branches, the kernel features a **Unified Scheduler Loop**. We utilized C Preprocessor Directives (`#ifdef`, `#elif`) combined with Makefile flags to compile specific scheduling logic dynamically.
 
@@ -92,7 +92,7 @@ The build system was extended to pass the `SCHEDULER` variable directly to the G
 SCHEDULER ?= DEFAULT
 CFLAGS += -DSCHEDULER_$(SCHEDULER)
 
-📈 Testing & Benchmarks
+Testing & Benchmarks
 The project includes custom user-space benchmarking suites to validate the theoretical models:
 
 1. Priority Test (test_prio)
@@ -113,13 +113,13 @@ Process B: 10 Tickets (~9.1% win probability)
 
 Result: Process A receives exponentially more CPU time slices over the execution window and terminates significantly faster, proving the mathematical accuracy of the proportional-share PRNG model.
 
-🚀 How to Run
+How to Run
 Ensure you have the RISC-V toolchain (riscv64-linux-gnu-gcc) and qemu-system-riscv64 installed.
 
 Clone the repository:
 
 Bash
-git clone [https://github.com/amirpoori99/xv6-riscv-project.git](https://github.com/amirpoori99/xv6-riscv-project.git)
+git clone https://github.com/amirpoori99/xv6-riscv-project.git
 cd xv6-riscv-project
 Boot with Default Scheduler (Round-Robin):
 
@@ -136,3 +136,5 @@ make qemu CPUS=1 SCHEDULER=LOTTERY
 To exit QEMU, press Ctrl + A, release, then press X.
 
 Developed as part of the Operating Systems course curriculum.
+
+
