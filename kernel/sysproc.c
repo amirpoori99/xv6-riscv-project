@@ -126,3 +126,14 @@ sys_setpriority(void)
   argint(1, &priority);
   return setpriority(pid, priority);
 }
+
+uint64
+sys_settickets(void)
+{
+  int n;
+  argint(0, &n);
+  if(n < 1)
+    return -1;
+  myproc()->tickets = n;
+  return 0;
+}

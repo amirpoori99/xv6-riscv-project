@@ -125,6 +125,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->priority = 50;
+  p->tickets = 1;
   p->state = USED;
 
   // Allocate a trapframe page.
@@ -277,6 +278,7 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
+  np->tickets = p->tickets;
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
@@ -429,19 +431,20 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  
+  // PRNG state for lottery scheduler
+  static unsigned long randstate = 1;
 
   for(;;){
     intr_on();
 
+#ifdef SCHEDULER_PRIORITY
     struct proc *best_p = 0;
-    
-    // Find the process with the highest priority (lowest number)
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
         if(!best_p || p->priority < best_p->priority) {
-          if(best_p)
-            release(&best_p->lock);
+          if(best_p) release(&best_p->lock);
           best_p = p;
         } else {
           release(&p->lock);
@@ -450,7 +453,6 @@ scheduler(void)
         release(&p->lock);
       }
     }
-
     if(best_p) {
       best_p->state = RUNNING;
       c->proc = best_p;
@@ -458,6 +460,53 @@ scheduler(void)
       c->proc = 0;
       release(&best_p->lock);
     }
+
+#elif defined(SCHEDULER_LOTTERY)
+    int total_tickets = 0;
+    for(p = proc; p < &proc[NPROC]; p++){
+      acquire(&p->lock);
+      if(p->state == RUNNABLE){
+        total_tickets += p->tickets;
+      }
+      release(&p->lock);
+    }
+
+    if(total_tickets > 0){
+      // LCG PRNG using system ticks as seed
+      randstate = randstate * 1664525 + 1013904223 + ticks;
+      int winning_ticket = (randstate >> 16) % total_tickets;
+      int current_ticket = 0;
+      
+      for(p = proc; p < &proc[NPROC]; p++){
+        acquire(&p->lock);
+        if(p->state == RUNNABLE){
+          current_ticket += p->tickets;
+          if(current_ticket > winning_ticket){
+            p->state = RUNNING;
+            c->proc = p;
+            swtch(&c->context, &p->context);
+            c->proc = 0;
+            release(&p->lock);
+            break;
+          }
+        }
+        release(&p->lock);
+      }
+    }
+
+#else
+    // Default Round Robin
+    for(p = proc; p < &proc[NPROC]; p++) {
+      acquire(&p->lock);
+      if(p->state == RUNNABLE) {
+        p->state = RUNNING;
+        c->proc = p;
+        swtch(&c->context, &p->context);
+        c->proc = 0;
+      }
+      release(&p->lock);
+    }
+#endif
   }
 }
 // Switch to scheduler.  Must hold only p->lock
